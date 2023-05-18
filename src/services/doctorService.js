@@ -52,16 +52,14 @@ let getAllDoctor = () => {
 let saveInforDoctorService = (inputData) => {
     return new Promise(async (resolve, reject) => {
         try {
-            if (!(inputData.doctorId || inputData.contentHTML || inputData.contentMarkdown)) {
+            if (!(inputData.doctorId || inputData.contentHTML || inputData.contentMarkdown || inputData.action)) {
                 resolve({
                     errCode: 1,
                     errMessage: 'Missing require parameter'
                 })
             } else {
-                let checkDoctor = await db.Markdown.findOne({
-                    where: { doctorId: inputData.doctorId }
-                })
-                if (checkDoctor) {  // check markdown exist
+                
+                if (inputData.action == 'UPDATE') {  // check markdown exist
                     await db.Markdown.update({
                         contentHTML: inputData.contentHTML,
                         contentMarkdown: inputData.contentMarkdown,
