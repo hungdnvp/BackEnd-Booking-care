@@ -1,4 +1,7 @@
 import db from '../models/index';
+require('dotenv').config();
+import _, { reject } from "lodash"
+const MAX_NUMBER_SCHEDULE = process.env.MAX_NUMBER_SCHEDULE;
 
 let getTopDoctorService = (limitInput) => {
     return new Promise(async (resolve, reject) => {
@@ -58,7 +61,7 @@ let saveInforDoctorService = (inputData) => {
                     errMessage: 'Missing require parameter'
                 })
             } else {
-                
+
                 if (inputData.action == 'UPDATE') {  // check markdown exist
                     await db.Markdown.update({
                         contentHTML: inputData.contentHTML,
@@ -118,7 +121,7 @@ let getDetailDoctorService = (inputId) => {
                 if (data && data.image) {
                     data.image = new Buffer(data.image, "base64").toString('binary');
                 }
-                if(!data){
+                if (!data) {
                     data = {}
                 }
                 resolve({
@@ -132,9 +135,78 @@ let getDetailDoctorService = (inputId) => {
         }
     })
 }
+let bulkCreateScheduleService = (data) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (!data || data.length < 1) {
+                resolve({
+                    errCode: 1,
+                    errMessage: 'Missing require parameter'
+                })
+            } else {
+                let schedule = data.map(item => {
+                    item.maxNumber = MAX_NUMBER_SCHEDULE;
+                    return item;
+                })
+                // kiem tra cac ban ghi da ton tai
+                let existing = await db.Schedule.findAll(
+                    {
+                        where: { doctorId: data[0].doctorId, date: data[0].date },
+                        attributes: ['timeType', 'date', 'doctorId', 'maxNumber'],
+                        raw: true
+                    }
+                )
+                // convert time
+                if (existing && existing.length > 0) {
+                    existing = existing.map(item => {
+                        item.date = new Date(item.date).getTime();
+                        return item;
+                    })
+
+                    schedule = _.differenceWith(schedule, existing, (a, b) => {
+                        return a.timeType === b.timeType && a.date === b.date;
+                    })
+                }
+
+                if (schedule && schedule.length > 0) {
+                    await db.Schedule.bulkCreate(schedule)
+                }
+                resolve({
+                    errCode: 0,
+                    errMessage: 'OK'
+                })
+            }
+
+        } catch (e) {
+            reject(e);
+        }
+    })
+}
+
+let getScheduleByDateService = (doctorId,date)=>{
+    return new Promise(async(resolve,reject)=>{
+        try{
+            let data = await db.Schedule.findAll({
+                where:{
+                    doctorId: doctorId,
+                    date: date
+                }
+            })
+            if(!data) data = []
+            resolve({
+                errCode: 0,
+                data: data
+            })
+        }catch(e){
+            reject(e)
+        }
+    })
+}
 module.exports = {
     getTopDoctorService: getTopDoctorService,
     getAllDoctor: getAllDoctor,
     saveInforDoctorService: saveInforDoctorService,
-    getDetailDoctorService: getDetailDoctorService
+    getDetailDoctorService: getDetailDoctorService,
+    bulkCreateScheduleService: bulkCreateScheduleService,
+    getScheduleByDateService: getScheduleByDateService
 }
