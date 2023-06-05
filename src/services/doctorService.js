@@ -55,13 +55,16 @@ let getAllDoctor = () => {
 let saveInforDoctorService = (inputData) => {
     return new Promise(async (resolve, reject) => {
         try {
-            if (!(inputData.doctorId || inputData.contentHTML || inputData.contentMarkdown || inputData.action)) {
+            if (!inputData.doctorId || !inputData.contentHTML || !inputData.contentMarkdown || !inputData.action
+                || !inputData.selectedPrice || !inputData.selectedPayment || !inputData.selectedProvince
+                || !inputData.nameClinic || !inputData.addressClinic || !inputData.note
+            ) {
                 resolve({
                     errCode: 1,
                     errMessage: 'Missing require parameter'
                 })
             } else {
-
+                
                 if (inputData.action == 'UPDATE') {  // check markdown exist
                     await db.Markdown.update({
                         contentHTML: inputData.contentHTML,
@@ -78,7 +81,32 @@ let saveInforDoctorService = (inputData) => {
                         doctorId: inputData.doctorId
                     })
                 }
+                // upsert doctor_infor
+                let doctorCheck = await db.Doctor_Infor.findOne({
+                    where: {
+                        doctorId: inputData.doctorId,
+                    }
+                })
+                if (doctorCheck) {
+                    doctorCheck.priceId = inputData.selectedPrice
+                    doctorCheck.paymentId = inputData.selectedPayment
+                    doctorCheck.provinceId = inputData.selectedProvince
+                    doctorCheck.nameClinic = inputData.nameClinic
+                    doctorCheck.addressClinic = inputData.addressClinic
+                    doctorCheck.note = inputData.note
 
+                    await doctorCheck.save()
+                } else {
+                    await db.Doctor_Infor.create({
+                        doctorId : inputData.doctorId,
+                        priceId : inputData.selectedPrice,
+                        paymentId : inputData.selectedPayment,
+                        provinceId : inputData.selectedProvince,
+                        nameClinic : inputData.nameClinic,
+                        addressClinic : inputData.addressClinic,
+                        note : inputData.note
+                    })
+                }
                 resolve({
                     errCode: 0,
                     errMessage: 'save infor doctor successed'
@@ -158,10 +186,6 @@ let bulkCreateScheduleService = (data) => {
                 )
                 // convert time
                 if (existing && existing.length > 0) {
-                    existing = existing.map(item => {
-                        item.date = new Date(item.date).getTime();
-                        return item;
-                    })
 
                     schedule = _.differenceWith(schedule, existing, (a, b) => {
                         return a.timeType === b.timeType && a.date === b.date;
@@ -183,21 +207,29 @@ let bulkCreateScheduleService = (data) => {
     })
 }
 
-let getScheduleByDateService = (doctorId,date)=>{
-    return new Promise(async(resolve,reject)=>{
-        try{
+let getScheduleByDateService = (doctorId, date) => {
+    return new Promise(async (resolve, reject) => {
+        try {
             let data = await db.Schedule.findAll({
-                where:{
+                where: {
                     doctorId: doctorId,
                     date: date
-                }
+                },
+                include: [
+                    {
+                        model: db.Allcode, as: 'timeTypeData',
+                        attributes: ['valueEN', 'valueVI']
+                    }
+                ],
+                raw: false,
+                nest: true
             })
-            if(!data) data = []
+            if (!data) data = []
             resolve({
                 errCode: 0,
                 data: data
             })
-        }catch(e){
+        } catch (e) {
             reject(e)
         }
     })
