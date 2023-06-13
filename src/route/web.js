@@ -3,6 +3,7 @@ import homeController from "../controllers/homeController";
 import userController from "../controllers/userController";
 import doctorController from '../controllers/doctorController';
 import patientController from '../controllers/patientController';
+import specialtyController from "../controllers/specialtyController";
 let router = express.Router();
 
 let initWebRoutes = (app) =>{
@@ -37,6 +38,12 @@ let initWebRoutes = (app) =>{
     // PATIENT/////////////////////////
     router.post('/api/patient_book_appointment',patientController.postBookAppointment);
     router.get('/api/verify_booking',patientController.getVerifyBooking);
+    // SPECIALTY ////////////////////
+    router.post('/api/create_specialty',specialtyController.createSpecialty);
+    router.get('/api/get_all_specialty',specialtyController.getAllSpecialty);
+    router.get('/api/get_detail_specialty',specialtyController.getDetailSpecialty);
+
+
 
 
     return app.use("/",router);

@@ -48,17 +48,16 @@ let getAllDoctor = () => {
                 doctors: doctors
             })
         } catch (e) {
-
+            reject(e)
         }
     })
 }
 let saveInforDoctorService = (inputData) => {
-    console.log('inputdata: ', inputData)
     return new Promise(async (resolve, reject) => {
         try {
             if (!inputData.doctorId || !inputData.contentHTML || !inputData.contentMarkdown || !inputData.action
                 || !inputData.selectedPrice || !inputData.selectedPayment || !inputData.selectedProvince
-                || !inputData.nameClinic || !inputData.addressClinic || !inputData.note
+                || !inputData.nameClinic || !inputData.addressClinic || !inputData.note || !inputData.specialtyId
             ) {
                 resolve({
                     errCode: 1,
@@ -94,7 +93,8 @@ let saveInforDoctorService = (inputData) => {
                     doctorCheck.provinceId = inputData.selectedProvince
                     doctorCheck.nameClinic = inputData.nameClinic
                     doctorCheck.addressClinic = inputData.addressClinic
-                    doctorCheck.note = inputData.note
+                    doctorCheck.note = inputData.note,
+                        doctorCheck.specialtyId = inputData.specialtyId
 
                     await db.Doctor_Infor.update({
                         priceId: inputData.selectedPrice,
@@ -103,6 +103,8 @@ let saveInforDoctorService = (inputData) => {
                         nameClinic: inputData.nameClinic,
                         addressClinic: inputData.addressClinic,
                         note: inputData.note,
+                        specialtyId : inputData.specialtyId
+
                     }, {
                         where: { doctorId: inputData.doctorId }
                     })
@@ -114,7 +116,9 @@ let saveInforDoctorService = (inputData) => {
                         provinceId: inputData.selectedProvince,
                         nameClinic: inputData.nameClinic,
                         addressClinic: inputData.addressClinic,
-                        note: inputData.note
+                        note: inputData.note,
+                        specialtyId : inputData.specialtyId
+
                     })
                 }
                 resolve({
