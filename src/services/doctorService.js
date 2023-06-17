@@ -103,7 +103,7 @@ let saveInforDoctorService = (inputData) => {
                         nameClinic: inputData.nameClinic,
                         addressClinic: inputData.addressClinic,
                         note: inputData.note,
-                        specialtyId : inputData.specialtyId
+                        specialtyId: inputData.specialtyId
 
                     }, {
                         where: { doctorId: inputData.doctorId }
@@ -117,7 +117,7 @@ let saveInforDoctorService = (inputData) => {
                         nameClinic: inputData.nameClinic,
                         addressClinic: inputData.addressClinic,
                         note: inputData.note,
-                        specialtyId : inputData.specialtyId
+                        specialtyId: inputData.specialtyId
 
                     })
                 }
@@ -354,6 +354,49 @@ let getProfileDoctorService = (inputId) => {
         }
     })
 }
+let getListPatientService = (doctorId, date) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (!doctorId || !date) {
+                resolve({
+                    errCode: 1,
+                    errMessage: "error form server"
+                })
+            } else {
+                let data = await db.Booking.findAll({
+                    where: {
+                        statusId: 'S2',
+                        doctorId: doctorId,
+                        date: date
+                    },
+                    include: [
+                        {
+                            model: db.User, as: 'patientData',
+                            attributes: ['email', 'firstName', 'address', 'gender'],
+                            include: [
+                                { model: db.Allcode, as: 'genderData', attributes: ['valueEN', 'valueVI'] }
+                            ]
+                        },
+                        {
+                            model: db.Allcode, as: 'timeTypeDataBooking',
+                            attributes: ['valueEN', 'valueVI']
+                            
+                        }],
+                    raw: false,
+                    nest: true
+
+                })
+
+                resolve({
+                    errCode: 0,
+                    data: data
+                })
+            }
+        } catch (e) {
+            reject(e)
+        }
+    })
+}
 module.exports = {
     getTopDoctorService: getTopDoctorService,
     getAllDoctor: getAllDoctor,
@@ -362,5 +405,6 @@ module.exports = {
     bulkCreateScheduleService: bulkCreateScheduleService,
     getScheduleByDateService: getScheduleByDateService,
     getDetailDoctorExtraService: getDetailDoctorExtraService,
-    getProfileDoctorService: getProfileDoctorService
+    getProfileDoctorService: getProfileDoctorService,
+    getListPatientService: getListPatientService
 }

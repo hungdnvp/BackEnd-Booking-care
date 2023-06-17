@@ -24,12 +24,15 @@ let initWebRoutes = (app) =>{
     router.delete('/api/delete_user',userController.handleDeleteUser);
     router.get('/api/allcode',userController.getAllcode);
 
+    //*****************DOCTOR********************* */
     router.get('/api/get_top_doctor_home',doctorController.getTopDoctor);
     router.get('/api/get_all_doctor',doctorController.getAllDoctor);
     router.post('/api/save_infor_doctor',doctorController.postInforDoctor);
     router.get('/api/get_detail_doctor',doctorController.getDetailDoctor);
     router.get('/api/get_detail_doctor_extra',doctorController.getDetailDoctorExtra);
     router.get('/api/get_profile_doctor',doctorController.getProfileDoctor);
+    router.get('/api/get_list_patient',doctorController.getListPatient);
+
 
 
     //*****************SCHEDULE**************** */
