@@ -2,7 +2,10 @@ import db from '../models/index';
 require('dotenv').config();
 import _, { reject } from "lodash"
 const MAX_NUMBER_SCHEDULE = process.env.MAX_NUMBER_SCHEDULE;
+import emailService from './emailService';
 
+
+const { Op } = require("sequelize");
 let getTopDoctorService = (limitInput) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -365,9 +368,12 @@ let getListPatientService = (doctorId, date) => {
             } else {
                 let data = await db.Booking.findAll({
                     where: {
-                        statusId: 'S2',
                         doctorId: doctorId,
-                        date: date
+                        date: date,
+                        statusId: {
+                            [Op.in]: ['S2', 'S3']
+                          }
+                        
                     },
                     include: [
                         {
@@ -397,6 +403,38 @@ let getListPatientService = (doctorId, date) => {
         }
     })
 }
+
+let examineSuccessService = (inputData) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (!inputData.email || !inputData.bookingId || !inputData.firstName ){
+                resolve({
+                    errCode: 1,
+                    errMessage: 'missing parameter'
+                })
+            }else{
+                // update status booking
+                await db.Booking.update({
+                    statusId: 'S3'
+                }, {
+                    where: { id: inputData.bookingId }
+                })
+                // send mail bill
+
+                await emailService.sendBillEmail({
+                    reciverEmail: inputData.email,
+                    fullName: inputData.firstName
+                })
+                resolve({
+                    errCode: 0,
+                    errMessage: 'verify examine success!'
+                })
+            }
+        } catch (e) {
+            reject(e)
+        }
+    })
+}
 module.exports = {
     getTopDoctorService: getTopDoctorService,
     getAllDoctor: getAllDoctor,
@@ -406,5 +444,6 @@ module.exports = {
     getScheduleByDateService: getScheduleByDateService,
     getDetailDoctorExtraService: getDetailDoctorExtraService,
     getProfileDoctorService: getProfileDoctorService,
-    getListPatientService: getListPatientService
+    getListPatientService: getListPatientService,
+    examineSuccessService: examineSuccessService
 }

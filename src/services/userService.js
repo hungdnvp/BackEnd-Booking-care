@@ -1,6 +1,7 @@
 import db from '../models/index';
 import bcrypt from 'bcryptjs';
 const salt = bcrypt.genSaltSync(10);
+const { Op } = require("sequelize");
 
 let handleLogin = (email, password) => {
     return new Promise(async (resolve, reject) => {
@@ -71,6 +72,11 @@ let getUser = (userId)=>{
             let users =''
             if(userId === 'ALL'){
                 users = await db.User.findAll({
+                    where: {
+                        roleId: {
+                            [Op.in]: ['R1', 'R2']
+                          }
+                    },
                     attributes:{
                         exclude: ['password']
                     }

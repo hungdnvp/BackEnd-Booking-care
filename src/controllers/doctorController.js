@@ -7,7 +7,6 @@ let getTopDoctor = async (req, res) => {
         let respone = await doctorService.getTopDoctorService(+limit);
         return res.status(200).json(respone);
     } catch (e) {
-        console.log(e);
         return res.status(200).json({
             errCode: -1,
             errMessage: 'Error from server'
@@ -24,7 +23,6 @@ let getAllDoctor = async (req, res) => {
             data: data.doctors
         })
     } catch (e) {
-        console.log(e)
         return res.status(500).json({
             errCode: -1,
             errMessage: 'Error from server'
@@ -36,7 +34,6 @@ let postInforDoctor = async (req, res) => {
         let response = await doctorService.saveInforDoctorService(req.body);
         return res.status(200).json(response);
     } catch (e) {
-        console.log(e)
         return res.status(500).json({
             errCode: -1,
             errMessage: 'Error from server'
@@ -129,6 +126,18 @@ let getListPatient = async (req, res) => {
         })
     }
 }
+let examineSuccess = async (req, res) => {
+    try {
+        let response = await doctorService.examineSuccessService(req.body);
+        return res.status(200).json(response);
+    } catch (e) {
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        })
+    }
+}
+
 module.exports = {
     getTopDoctor: getTopDoctor,
     getAllDoctor: getAllDoctor,
@@ -138,5 +147,6 @@ module.exports = {
     getScheduleByDate: getScheduleByDate,
     getDetailDoctorExtra: getDetailDoctorExtra,
     getProfileDoctor: getProfileDoctor,
-    getListPatient: getListPatient
+    getListPatient: getListPatient,
+    examineSuccess: examineSuccess
 }

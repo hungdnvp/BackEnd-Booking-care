@@ -29,38 +29,56 @@ let postBookAppointmentService = (data) => {
                 })
 
                 //upsert a booking record
-                let token = uuidv4()
-                let booking = await db.Booking.findOrCreate({
-                    where: { doctorId: data.doctorId, date: data.date, timeType: data.timeType },
-                    defaults: {
-                        statusId: 'S1',
-                        doctorId: data.doctorId,
-                        patientId: user[0].id,
-                        date: data.date,
-                        timeType: data.timeType,
-                        token: token
+                
+                // tính số bệnh nhân đã đặt lịch và ca này
+                let amount = await db.Booking.count({
+                    where: {
+                        doctorId: data.doctorId, date: data.date, timeType: data.timeType
                     }
-                })
-                if (!booking[1]) {
-                    resolve({
-                        errCode: 2,
-                        errMessage: "Can't douple booking",
-                    })
-                } else {
-                    // send verify Email
-                    let datebooking = moment.unix(+ data.date / 1000).format('dddd - DD/MM/YYYY')
-                    // build Link verifyLink Email
+                });
+                if ( amount < 5) {
 
-                    let verifyLink = `${process.env.URL_FONTEND}/api/verify_booking?token=${token}&doctorId=${data.doctorId}`
-                    await emailService.sendSimpleEmail({
-                        reciverEmail: data.email,
-                        fullName: data.fullName,
-                        time: data.timeTypeData + ' ,ngày ' + datebooking,
-                        verifyLink: verifyLink
+                    let token = uuidv4()
+
+                    let booking = await db.Booking.findOrCreate({
+                        where: { patientId: user[0].id, date: data.date, timeType: data.timeType },
+                        defaults: {
+                            statusId: 'S1',
+                            doctorId: data.doctorId,
+                            patientId: user[0].id,
+                            date: data.date,
+                            timeType: data.timeType,
+                            token: token
+                        }
                     })
+
+                    // nếu đã có lịch cùng 1 benh nhan và cùng 1 ngày và 1 khoảng thời gian
+                    if (!booking[1]) {
+                        resolve({
+                            errCode: 2,
+                            errMessage: "Can't douple booking on the same time",
+                        })
+                    } else {
+                        // send verify Email
+                        let datebooking = moment.unix(+ data.date / 1000).format('dddd - DD/MM/YYYY')
+                        // build Link verifyLink Email
+
+                        let verifyLink = `${process.env.URL_FONTEND}/api/verify_booking?token=${token}&doctorId=${data.doctorId}`
+                        await emailService.sendSimpleEmail({
+                            reciverEmail: data.email,
+                            fullName: data.fullName,
+                            time: data.timeTypeData + ' ,ngày ' + datebooking,
+                            verifyLink: verifyLink
+                        })
+                        resolve({
+                            errCode: 0,
+                            errMessage: "Save infor paitent success",
+                        })
+                    }
+                }else{
                     resolve({
-                        errCode: 0,
-                        errMessage: "Save infor paitent success",
+                        errCode: 3,
+                        errMessage: "Full slots booking for this time !",
                     })
                 }
             }
